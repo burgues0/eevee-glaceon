@@ -100,5 +100,6 @@ nav:
       - Infraestrutura: infrastructure.md
       - Testes do projeto: testing.md
       - Como contribuir: contributing.md
+      - GLACEON (Terraform/Ansible): glaceon.md
   - Pesquisa:
       - Visão geral: research/overview.md
