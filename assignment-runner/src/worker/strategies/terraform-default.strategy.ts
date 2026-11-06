@@ -34,7 +34,9 @@ export class TerraformDefaultStrategy extends BootstrapInitContainerStrategy {
   processLogResult = parseJestLogResult;
 
   buildExecutionJobCommand(_createWorkerData: CreateWorkerDto): string[] {
-    return ['/app/trigger.sh'];
+    // Kubernetes command overrides ENTRYPOINT, so invoke it explicitly
+    // (same reasoning as PostgresqlContainerStrategy.withPostgresql).
+    return ['/usr/local/bin/eevee-terraform-entrypoint', '/app/trigger.sh'];
   }
 
   buildWorkerPayload(
