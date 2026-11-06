@@ -19,10 +19,13 @@ Mesma arquitetura e mesmo endpoint padrão (`http://localhost:4566`, variáveis 
 
 ### Como funciona
 
-1. `images/terraform-default/Dockerfile` usa build multi-stage: extrai o binário `floci-aws` da imagem oficial `floci/floci:latest` (sem precisar montar `/var/run/docker.sock`, já que os exercícios não dependem de serviços que exigem container real, como Lambda).
-2. `eevee-terraform-entrypoint` inicia o Floci em background, espera responder (retry de uma chamada AWS CLI benigna, como `aws sts get-caller-identity`, em vez de depender de um endpoint de health específico), e só então executa o comando real (`exec "$@"`).
+1. `images/terraform-default/Dockerfile` usa build multi-stage: extrai o binário nativo (`/app/application` na imagem oficial, renomeado pra `floci-aws`) de `floci/floci:latest`. **Esse binário é linkado contra glibc** (a imagem oficial do Floci usa RHEL) — por isso a imagem final do worker não pode ser Alpine/musl como as outras imagens do EEVEE. A base escolhida foi `debian:bookworm-slim`; o Terraform é baixado direto da HashiCorp (release oficial) num estágio de build separado, e a AWS CLI vem do pacote `awscli` do Debian. Não precisa montar `/var/run/docker.sock` — os exercícios não dependem de serviços que exigem container real, como Lambda.
+2. `eevee-terraform-entrypoint` inicia o Floci em background (`-Dquarkus.http.host=127.0.0.1`, só acessível de dentro do próprio container) e espera responder fazendo polling em `GET /_floci/init` até a resposta conter `"ready":true` — esse é o mesmo endpoint que o healthcheck oficial da imagem do Floci usa, confirmado lendo o script `healthcheck.sh` dela. Só então executa o comando real (`exec "$@"`).
 3. O bloco de provider do Terraform (`skip_credentials_validation`, `skip_requesting_account_id`, `skip_metadata_api_check = true`, região fixa, credenciais fake) faz parte do **boilerplate padrão do exercício** mostrado ao aluno (`WORKER_DEFAULT_TEMPLATE_CONTENT_MAP[WorkerType.TERRAFORM]` no frontend) — não é um arquivo injetado escondido. O aluno vê e lê essa configuração.
-4. Cleanup: nenhum código novo. O TTL/deadline do Job (`ttlSecondsAfterFinished`/`activeDeadlineSeconds`, mesmos campos que `PostgresqlContainerStrategy` já usa) encerra o container, e o Floci junto com ele.
+4. Scripts de validação que chamam a AWS CLI diretamente (não via provider Terraform) precisam passar `--endpoint-url http://localhost:4566` explícito — ver nota na tabela abaixo.
+5. Cleanup: nenhum código novo. O TTL/deadline do Job (`ttlSecondsAfterFinished`/`activeDeadlineSeconds`, mesmos campos que `PostgresqlContainerStrategy` já usa) encerra o container, e o Floci junto com ele.
+
+Testado manualmente (`docker buildx build` + `docker run` com `/app/src`/`/app/test` montados): build passa, Floci sobe e fica pronto em menos de 1s, `terraform apply` cria o recurso (EC2 emulado como metadata-only, sem container real, já que não há socket do Docker montado — esperado), e o script de validação via AWS CLI confirma o estado real do recurso. Testado também o caso de falha: exercício com `instance_type` errado faz o script de validação falhar corretamente (não é exit-code-only).
 
 Ansible não depende de nenhuma dessas peças — não tem recurso cloud a emular. O fallback para `-i "localhost," -c local` quando o aluno não fornece inventário é o comportamento padrão pedagógico esperado (não um caso de borda a resolver).
 
@@ -30,31 +33,32 @@ Ansible não depende de nenhuma dessas peças — não tem recurso cloud a emula
 
 | Worker | Arquivos do aluno (`files`) | Scripts de validação (`testFiles`, sufixo `validation.sh`) |
 |---|---|---|
-| `TERRAFORM` | `.tf` na raiz e/ou `modules/.../main.tf` | Shell script, exit code 0 = passou. Convenção recomendada: usar a AWS CLI apontada pro Floci (`aws ... --query ... \| grep -q <esperado>`) pra checar o estado real do recurso, não só o exit code do `terraform apply` |
+| `TERRAFORM` | `.tf` na raiz e/ou `modules/.../main.tf` | Shell script, exit code 0 = passou. Convenção recomendada: usar a AWS CLI apontada pro Floci (`aws --endpoint-url http://localhost:4566 ... --query ... \| grep -q <esperado>`) pra checar o estado real do recurso, não só o exit code do `terraform apply`. **Sempre passar `--endpoint-url` explícito** — a variável de ambiente `AWS_ENDPOINT_URL` só é respeitada a partir do AWS CLI v2.13, e a versão instalada via `apt` no Debian (base da imagem) é mais antiga; sem a flag, o comando bate na AWS real e falha com `AuthFailure` |
 | `ANSIBLE` | playbook (`.yml`/`.yaml`) + inventário opcional (`hosts.ini`) | Shell script, exit code 0 = passou. Checar o efeito real do playbook (pacote instalado, processo rodando, conteúdo de arquivo), não só o exit code do `ansible-playbook` |
 
 Isso é igual ao contrato de arquivos que o restante do EEVEE já usa (`files`/`testFiles` escritos pelo bootstrap init container em `/app/src`/`/app/test`), sem convenção nova.
 
 ## Frontend — escopo da primeira versão
 
-A interface de referência (mockup de design) prevê duas abas, "Recursos" e "Editor", com terminal interativo e status "ao vivo" por recurso durante a execução. Para o primeiro lançamento, isso foi conscientemente reduzido:
+A interface de referência (mockup de design) prevê duas abas, "Recursos" e "Editor", com terminal interativo e status "ao vivo" por recurso durante a execução. Para o primeiro lançamento, isso foi conscientemente reduzido — e, na prática, **não exigiu nenhum componente novo**: o fluxo de workspace (`front/src/app/assignment/[id]/workspace/`) já é genérico por `WorkerType`, então TERRAFORM e ANSIBLE funcionam na UI só por estarem no enum e nos mapas de conteúdo padrão (confirmado lendo o código, não só supondo):
 
-- **Editor**: árvore de arquivos e editor de código reaproveitados de `front/src/app/assignment/[id]/workspace/` (já genéricos, não específicos de uma linguagem). O painel que no mockup é um terminal interativo vira, nesta versão, um visualizador de output somente leitura (stdout/stderr da última tentativa).
-- **Recursos**: árvore de recursos/playbooks com status final (passou/falhou), não progresso ao vivo durante a execução — o modelo de execução do EEVEE hoje é "submete, espera, chega um resultado", não streaming por recurso.
+- **Editor**: árvore de arquivos e editor de código já são genéricos, reaproveitados como estão.
+- **Output/"Recursos"**: o diálogo de pré-visualização (`workspace-run-preview-dialog.tsx`) já mostra `passes`/`fails`/`report` de forma genérica para qualquer worker — o `<ScrollArea>` com o "Relatório" (stdout/stderr da execução) já é exatamente o visualizador de output somente leitura que esta primeira versão precisa. Não há status "ao vivo" por recurso durante a execução — o modelo de execução do EEVEE hoje é "submete, espera, chega um resultado", não streaming por recurso — mas isso já era assim para todo worker, não é uma lacuna nova do GLACEON.
+- O preflight do frontend (`workspace-preflight.utils.ts`) deriva `SUPPORTED_WORKERS` de `Object.values(WorkerType)` e só valida estrutura de arquivo para os workers Node/Python — TERRAFORM/ANSIBLE passam no preflight sem precisar de um caso novo no switch.
 - Realce de sintaxe do Terraform no Monaco fica em `plaintext` por ora (sem gramática HCL pronta); Ansible usa `yaml`, já suportado.
 
-Um terminal interativo de verdade exigiria exec via WebSocket contra o Kubernetes, infraestrutura sem precedente no projeto — fica como evolução futura, não bloqueia esta primeira versão.
+Um terminal interativo de verdade, ou status ao vivo por recurso, exigiria exec via WebSocket contra o Kubernetes ou streaming de execução — infraestrutura sem precedente no projeto. Fica como evolução futura, não bloqueia esta primeira versão.
 
 ## Checklist de implementação (worker novo)
 
-Segue `docs/contributing.md` § "Adicionar um executor", aplicado duas vezes (TERRAFORM e ANSIBLE):
+Segue `docs/contributing.md` § "Adicionar um executor", aplicado duas vezes (TERRAFORM e ANSIBLE). Estado em 2026-11-05:
 
-1. Enum em `assignment-runner/src/worker/enum/worker-type.enum.ts` e `platform-api/src/worker/enum/worker-type.enum.ts`.
-2. Strategy em `assignment-runner/src/worker/strategies/` + registro em `worker.service.ts`.
-3. Imagem em `images/<nome>-default/`.
-4. Migration do enum Postgres em `platform-api/src/migrations/`.
-5. Espelhar no frontend: `front/src/app/interface/scheduler-api/worker.ts`, `front/src/app/admin/assignments/constants.ts` (exibição, template padrão, script de validação padrão), `front/src/app/admin/templates/constants.ts`, `front/src/lib/monaco/worker-editor-config.ts`.
-6. Atualizar `images/Makefile` e, se aplicável, `infrastructure/helm/eevee/values.yaml` + `templates/_helpers.tpl`.
-7. Build e load da imagem na cluster (`make -C images build-<nome>-default load-<nome>-default`).
-8. Testar template, preview, submissão, cancelamento e parsing do resultado.
-9. Documentar arquivos exigidos, framework de teste, rede e credenciais (esta página).
+1. ✅ Enum em `assignment-runner/src/worker/enum/worker-type.enum.ts` e `platform-api/src/worker/enum/worker-type.enum.ts`.
+2. ✅ Strategy em `assignment-runner/src/worker/strategies/` + registro em `worker.service.ts`.
+3. ✅ Imagem em `images/<nome>-default/` — build e smoke test via `docker run` direto confirmados (ver seção acima).
+4. ✅ Migration do enum Postgres em `platform-api/src/migrations/` (`1791700000000-AddTerraformAndAnsibleWorkerTypes.ts`) + `worker-payload-builder.service.ts` (mapa de `srcPath`/`testPath` que o checklist do `contributing.md` não cita, mas o `tsc` pegou como `Record<WorkerType, ...>` faltando).
+5. ✅ Espelhado no frontend: `front/src/app/interface/scheduler-api/worker.ts`, `front/src/app/admin/assignments/constants.ts` (exibição, template padrão e script de validação padrão — com o exercício real de EC2+nginx), `front/src/app/admin/templates/constants.ts`, `front/src/lib/monaco/worker-editor-config.ts`. Nenhum componente de UI novo precisou ser escrito — ver seção "Frontend" abaixo.
+6. ✅ `images/Makefile` e `infrastructure/helm/eevee/values.yaml` + `templates/_helpers.tpl` atualizados.
+7. ⬜ Build e load da imagem no cluster real (`make -C images build-<nome>-default load-<nome>-default` contra o minikube) — testado só fora do cluster até aqui.
+8. ⬜ Testar template, preview, submissão, cancelamento e parsing do resultado pela UI de admin real, dentro do cluster.
+9. ✅ Documentar arquivos exigidos, framework de teste, rede e credenciais (esta página).
