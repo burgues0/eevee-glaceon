@@ -9,4 +9,6 @@ export enum WorkerType {
   NODE_NESTJS_POSTGRESQL = 'node_nestjs_postgresql',
   NODE_TERAORM = 'node_teraorm',
   PYTHON_DEFAULT = 'python_default',
+  TERRAFORM = 'terraform',
+  ANSIBLE = 'ansible',
 }

@@ -15,6 +15,8 @@ const WORKER_PATHS: Record<WorkerType,{ srcPath: string; testPath: string }> = {
   [WorkerType.NODE_NESTJS_POSTGRESQL]: { srcPath: '/app/src', testPath: '/app/test' },
   [WorkerType.NODE_TERAORM]: { srcPath: '/app/src', testPath: '/app/test' },
   [WorkerType.PYTHON_DEFAULT]: { srcPath: '/app/src', testPath: '/app/test' },
+  [WorkerType.TERRAFORM]: { srcPath: '/app/src', testPath: '/app/test' },
+  [WorkerType.ANSIBLE]: { srcPath: '/app/src', testPath: '/app/test' },
 };
 
 @Injectable()
