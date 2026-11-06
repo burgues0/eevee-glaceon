@@ -1,4 +1,4 @@
-.PHONY: build-all build-node build-node-teraorm build-nestjs build-javascript-default build-grpc build-bootstrap build-python-default build-react build-nextjs load-all load-react load-nextjs load-node load-node-teraorm load-nestjs load-grpc load-bootstrap load-python-default rebuild-all rebuild-react rebuild-nextjs rebuild-node rebuild-node-teraorm rebuild-nestjs rebuild-bootstrap rebuild-python-default help clean clean-minikube
+.PHONY: build-all build-node build-node-teraorm build-nestjs build-javascript-default build-grpc build-bootstrap build-python-default build-react build-nextjs build-terraform-default build-ansible-default load-all load-react load-nextjs load-node load-node-teraorm load-nestjs load-grpc load-bootstrap load-python-default load-terraform-default load-ansible-default rebuild-all rebuild-react rebuild-nextjs rebuild-node rebuild-node-teraorm rebuild-nestjs rebuild-bootstrap rebuild-python-default rebuild-terraform-default rebuild-ansible-default help clean clean-minikube
 
 DOCKER_REGISTRY ?=
 
@@ -13,6 +13,8 @@ NODE_TERAORM_IMAGE = worker-node-teraorm-img
 NESTJS_IMAGE   = worker-nestjs-default-img
 GRPC_IMAGE     = worker-grpc-img
 PYTHON_IMAGE   = worker-python-default-img
+TERRAFORM_DEFAULT_IMAGE = worker-terraform-default-img
+ANSIBLE_DEFAULT_IMAGE = worker-ansible-default-img
 BOOTSTRAP_IMAGE = eevee-worker-bootstrap
 
 help:
@@ -25,7 +27,7 @@ help:
 	@echo "  DOCKER_REGISTRY - Docker registry to push images (default: docker.io/library)"
 	@echo "  Worker images always use :latest"
 
-build-all: build-react build-nextjs build-node build-javascript-default build-node-teraorm build-nestjs build-grpc build-python-default build-bootstrap ## Build all worker Docker images (legacy)
+build-all: build-react build-nextjs build-node build-javascript-default build-node-teraorm build-nestjs build-grpc build-python-default build-terraform-default build-ansible-default build-bootstrap ## Build all worker Docker images (legacy)
 
 build-react: ## Build the React Cypress worker Docker image
 	@echo "Building React Cypress worker Docker image..."
@@ -67,12 +69,22 @@ build-python-default: ## Build the Python pytest worker Docker image
 	docker buildx build -t $(IMAGE_PREFIX)$(PYTHON_IMAGE):latest -f ./python-default/Dockerfile ./python-default
 	echo "Python pytest worker Docker image built successfully."
 
+build-terraform-default: ## Build the Terraform worker Docker image
+	@echo "Building Terraform worker Docker image..."
+	docker buildx build -t $(IMAGE_PREFIX)$(TERRAFORM_DEFAULT_IMAGE):latest -f ./terraform-default/Dockerfile ./terraform-default
+	echo "Terraform worker Docker image built successfully."
+
+build-ansible-default: ## Build the Ansible worker Docker image
+	@echo "Building Ansible worker Docker image..."
+	docker buildx build -t $(IMAGE_PREFIX)$(ANSIBLE_DEFAULT_IMAGE):latest -f ./ansible-default/Dockerfile ./ansible-default
+	echo "Ansible worker Docker image built successfully."
+
 build-bootstrap: ## Build the worker-bootstrap Docker image
 	@echo "Building worker-bootstrap Docker image..."
 	docker buildx build -t $(IMAGE_PREFIX)$(BOOTSTRAP_IMAGE):latest -f ./worker-bootstrap/Dockerfile ./worker-bootstrap
 	echo "worker-bootstrap Docker image built successfully."
 
-load-all: load-react load-nextjs load-node load-javascript-default load-node-teraorm load-nestjs load-grpc load-python-default load-bootstrap ## Load all worker Docker images into local Docker daemon
+load-all: load-react load-nextjs load-node load-javascript-default load-node-teraorm load-nestjs load-grpc load-python-default load-terraform-default load-ansible-default load-bootstrap ## Load all worker Docker images into local Docker daemon
 
 load-react: ## Load the React Cypress worker Docker image into local Docker daemon
 	@echo "Loading React Cypress Worker Docker Image into minikube..."
@@ -114,6 +126,16 @@ load-python-default: ## Load the Python pytest worker Docker image into local Do
 	minikube image load $(IMAGE_PREFIX)$(PYTHON_IMAGE):latest
 	@echo "Python pytest Worker Docker Image loaded successfully."
 
+load-terraform-default: ## Load the Terraform worker Docker image into local Docker daemon
+	@echo "Loading Terraform Worker Docker Image into minikube..."
+	minikube image load $(IMAGE_PREFIX)$(TERRAFORM_DEFAULT_IMAGE):latest
+	@echo "Terraform Worker Docker Image loaded successfully."
+
+load-ansible-default: ## Load the Ansible worker Docker image into local Docker daemon
+	@echo "Loading Ansible Worker Docker Image into minikube..."
+	minikube image load $(IMAGE_PREFIX)$(ANSIBLE_DEFAULT_IMAGE):latest
+	@echo "Ansible Worker Docker Image loaded successfully."
+
 load-bootstrap: ## Load the worker-bootstrap Docker image into local Docker daemon
 	@echo "Loading worker-bootstrap Docker image into minikube..."
 	minikube image load $(IMAGE_PREFIX)$(BOOTSTRAP_IMAGE):latest
@@ -134,6 +156,10 @@ rebuild-node-teraorm: build-node-teraorm load-node-teraorm ## Rebuild and load t
 rebuild-nestjs: build-nestjs load-nestjs ## Rebuild and load the Nest.js default worker Docker image into local Docker daemon
 
 rebuild-python-default: build-python-default load-python-default ## Rebuild and load the Python pytest worker Docker image into local Docker daemon
+
+rebuild-terraform-default: build-terraform-default load-terraform-default ## Rebuild and load the Terraform worker Docker image into local Docker daemon
+
+rebuild-ansible-default: build-ansible-default load-ansible-default ## Rebuild and load the Ansible worker Docker image into local Docker daemon
 
 rebuild-bootstrap: build-bootstrap load-bootstrap ## Rebuild and load the worker-bootstrap Docker image into local Docker daemon
 
