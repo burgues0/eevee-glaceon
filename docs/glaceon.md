@@ -27,6 +27,9 @@ Mesma arquitetura e mesmo endpoint padrão (`http://localhost:4566`, variáveis 
 
 Testado manualmente (`docker buildx build` + `docker run` com `/app/src`/`/app/test` montados): build passa, Floci sobe e fica pronto em menos de 1s, `terraform apply` cria o recurso (EC2 emulado como metadata-only, sem container real, já que não há socket do Docker montado — esperado), e o script de validação via AWS CLI confirma o estado real do recurso. Testado também o caso de falha: exercício com `instance_type` errado faz o script de validação falhar corretamente (não é exit-code-only).
 
+!!! warning "Kubernetes `command` sobrescreve `ENTRYPOINT`"
+    O `docker run` isolado passou mesmo com `buildExecutionJobCommand` retornando só `['/app/trigger.sh']`, porque o Docker honra `ENTRYPOINT`+`CMD` normalmente. Dentro de um Job Kubernetes real isso falha: o campo `command` do container **sobrescreve** o `ENTRYPOINT` da imagem (diferente de `args`, que só sobrescreve `CMD`), então `eevee-terraform-entrypoint` nunca executava e o Floci não subia — `terraform apply` batia em `connection refused` na porta 4566. Só foi pego testando dentro do minikube. Corrigido retornando `['/usr/local/bin/eevee-terraform-entrypoint', '/app/trigger.sh']`, mesmo padrão que `PostgresqlContainerStrategy.withPostgresql` já usa e documenta pro mesmo motivo.
+
 Ansible não depende de nenhuma dessas peças — não tem recurso cloud a emular. O fallback para `-i "localhost," -c local` quando o aluno não fornece inventário é o comportamento padrão pedagógico esperado (não um caso de borda a resolver).
 
 ## Arquivos exigidos por exercício
@@ -51,7 +54,7 @@ Um terminal interativo de verdade, ou status ao vivo por recurso, exigiria exec 
 
 ## Checklist de implementação (worker novo)
 
-Segue `docs/contributing.md` § "Adicionar um executor", aplicado duas vezes (TERRAFORM e ANSIBLE). Estado em 2026-11-05:
+Segue `docs/contributing.md` § "Adicionar um executor", aplicado duas vezes (TERRAFORM e ANSIBLE). Estado em 2026-11-06:
 
 1. ✅ Enum em `assignment-runner/src/worker/enum/worker-type.enum.ts` e `platform-api/src/worker/enum/worker-type.enum.ts`.
 2. ✅ Strategy em `assignment-runner/src/worker/strategies/` + registro em `worker.service.ts`.
@@ -59,6 +62,6 @@ Segue `docs/contributing.md` § "Adicionar um executor", aplicado duas vezes (TE
 4. ✅ Migration do enum Postgres em `platform-api/src/migrations/` (`1791700000000-AddTerraformAndAnsibleWorkerTypes.ts`) + `worker-payload-builder.service.ts` (mapa de `srcPath`/`testPath` que o checklist do `contributing.md` não cita, mas o `tsc` pegou como `Record<WorkerType, ...>` faltando).
 5. ✅ Espelhado no frontend: `front/src/app/interface/scheduler-api/worker.ts`, `front/src/app/admin/assignments/constants.ts` (exibição, template padrão e script de validação padrão — com o exercício real de EC2+nginx), `front/src/app/admin/templates/constants.ts`, `front/src/lib/monaco/worker-editor-config.ts`. Nenhum componente de UI novo precisou ser escrito — ver seção "Frontend" abaixo.
 6. ✅ `images/Makefile` e `infrastructure/helm/eevee/values.yaml` + `templates/_helpers.tpl` atualizados.
-7. ⬜ Build e load da imagem no cluster real (`make -C images build-<nome>-default load-<nome>-default` contra o minikube) — testado só fora do cluster até aqui.
-8. ⬜ Testar template, preview, submissão, cancelamento e parsing do resultado pela UI de admin real, dentro do cluster.
+7. ✅ Build e load das duas imagens num minikube real (`eevee-worker-bootstrap`, `worker-terraform-default-img`, `worker-ansible-default-img`), com `K8S_JOB_IMAGE_PULL_POLICY=IfNotPresent` localmente (produção usa registry real com `Always`, então isso é só ajuste de ambiente local, não mudança de código).
+8. ✅ Testado dentro do cluster real: criação de turma/template/assignment e submissão como aluno pela API da Platform API (equivalente ao que a UI de admin produz), para os dois workers, caso certo e caso errado de propósito em cada um — os quatro resultados (`passes`/`fails`) chegaram corretos até o aluno via o mesmo endpoint que o frontend usa. Foi nesse teste que o bug do `ENTRYPOINT` (caixa acima) apareceu e foi corrigido. Cancelamento (`DELETE` do Job em andamento) ainda não foi exercitado nesta rodada.
 9. ✅ Documentar arquivos exigidos, framework de teste, rede e credenciais (esta página).
