@@ -108,6 +108,21 @@ const WORKER_EDITOR_CONFIG_REGISTRY: Record<WorkerType, WorkerEditorConfig> = {
     compilerPreset: null,
     importCompletionPolicy: "none",
   },
+  [WorkerType.TERRAFORM]: {
+    // No HCL grammar in Monaco by default; plaintext until one is added.
+    editorLanguage: "plaintext",
+    fileExtension: ".tf",
+    defaultFileName: "main",
+    compilerPreset: null,
+    importCompletionPolicy: "none",
+  },
+  [WorkerType.ANSIBLE]: {
+    editorLanguage: "yaml",
+    fileExtension: ".yml",
+    defaultFileName: "playbook",
+    compilerPreset: null,
+    importCompletionPolicy: "none",
+  },
 };
 
 const FALLBACK_LANGUAGE_CONFIG: WorkerLanguageConfig = {

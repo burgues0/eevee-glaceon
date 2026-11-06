@@ -501,6 +501,8 @@ export const WORKER_EXHIBTION_REACTJS_CYPRESS = "React.js + Cypress";
 export const WORKER_EXHIBITION_NODE_DEFAULT_POSTGRESQL = "Node.js + PostgreSQL";
 export const WORKER_EXHIBITION_NODE_NESTJS_POSTGRESQL = "Node NestJS + PostgreSQL";
 export const WORKER_EXHIBITION_PYTHON_DEFAULT = "Python + pytest";
+export const WORKER_EXHIBITION_TERRAFORM = "Terraform (AWS emulado via Floci)";
+export const WORKER_EXHIBITION_ANSIBLE = "Ansible";
 
 export const DEFAULT_NODE_DEFAULT_POSTGRESQL_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
 export function main() {
@@ -509,6 +511,62 @@ export function main() {
   // Database: postgres, User: postgres, Password: root
   console.log('Hello, PostgreSQL!');
 }`;
+
+export const DEFAULT_TERRAFORM_ASSIGNMENT_TEMPLATE = `provider "aws" {
+  region                      = "us-east-1"
+  access_key                  = "test"
+  secret_key                  = "test"
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
+
+  endpoints {
+    ec2 = "http://localhost:4566"
+  }
+}
+
+resource "aws_instance" "nginx_server" {
+  ami = "ami-0c55b159cbfafe1f0"
+
+  # TODO: preencha o tipo da instância (ex.: "t2.micro") e a tag Name
+  # ("nginx-server") para que a validação encontre o recurso certo.
+  instance_type = ""
+
+  tags = {
+    Name = ""
+  }
+}
+`;
+
+export const DEFAULT_TERRAFORM_VALIDATION_SCRIPT = `#!/bin/bash
+set -uo pipefail
+
+aws --endpoint-url http://localhost:4566 ec2 describe-instances \\
+  --filters "Name=tag:Name,Values=nginx-server" \\
+  --query 'Reservations[].Instances[].InstanceType' --output text | grep -q t2.micro
+`;
+
+export const DEFAULT_ANSIBLE_ASSIGNMENT_TEMPLATE = `---
+- name: Provisionar e iniciar nginx
+  hosts: localhost
+  connection: local
+  become: true
+  tasks:
+    - name: Atualizar índice de pacotes
+      ansible.builtin.command: apt-get update
+      changed_when: false
+
+    # TODO: adicione uma tarefa para instalar o pacote "nginx-light"
+    # (ansible.builtin.command: apt-get install -y nginx-light) e outra
+    # para iniciar o nginx (ansible.builtin.command: nginx).
+`;
+
+export const DEFAULT_ANSIBLE_VALIDATION_SCRIPT = `#!/bin/bash
+set -uo pipefail
+
+command -v nginx >/dev/null 2>&1 || exit 1
+pgrep -x nginx >/dev/null 2>&1
+`;
 
 export const TEMPLATE_VARIABLES_IMPORTS = `import { vars } from './template-variables';
 
@@ -578,6 +636,8 @@ export const WorkerExibitionMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS_POSTGRESQL]: WORKER_EXHIBITION_NODE_NESTJS_POSTGRESQL,
   [WorkerType.NODE_TERAORM]: WORKER_EXHIBITION_NODE_DEFAULT,
   [WorkerType.PYTHON_DEFAULT]: WORKER_EXHIBITION_PYTHON_DEFAULT,
+  [WorkerType.TERRAFORM]: WORKER_EXHIBITION_TERRAFORM,
+  [WorkerType.ANSIBLE]: WORKER_EXHIBITION_ANSIBLE,
 };
 
 export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
@@ -591,6 +651,8 @@ export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS_POSTGRESQL]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_TERAORM]: DEFAULT_ASSIGNMENT_TEMPLATE,
   [WorkerType.PYTHON_DEFAULT]: DEFAULT_PYTHON_DEFAULT_ASSIGNMENT_TEMPLATE,
+  [WorkerType.TERRAFORM]: DEFAULT_TERRAFORM_ASSIGNMENT_TEMPLATE,
+  [WorkerType.ANSIBLE]: DEFAULT_ANSIBLE_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
@@ -604,6 +666,8 @@ export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS_POSTGRESQL]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_TERAORM]: DEFAULT_VALIDATION_SCRIPT,
   [WorkerType.PYTHON_DEFAULT]: DEFAULT_PYTHON_DEFAULT_VALIDATION_SCRIPT,
+  [WorkerType.TERRAFORM]: DEFAULT_TERRAFORM_VALIDATION_SCRIPT,
+  [WorkerType.ANSIBLE]: DEFAULT_ANSIBLE_VALIDATION_SCRIPT,
 };
 
 /**
@@ -622,4 +686,6 @@ export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS_POSTGRESQL]: DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS,
   [WorkerType.NODE_TERAORM]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
   [WorkerType.PYTHON_DEFAULT]: DEFAULT_PYTHON_DEFAULT_VALIDATION_SCRIPT,
+  [WorkerType.TERRAFORM]: DEFAULT_TERRAFORM_VALIDATION_SCRIPT,
+  [WorkerType.ANSIBLE]: DEFAULT_ANSIBLE_VALIDATION_SCRIPT,
 };

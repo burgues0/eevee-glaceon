@@ -155,6 +155,8 @@ export const WorkerTypeLabelMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS_POSTGRESQL]: WorkerType.NODE_NESTJS_POSTGRESQL,
   [WorkerType.NODE_TERAORM]: WorkerType.NODE_TERAORM,
   [WorkerType.PYTHON_DEFAULT]: WorkerType.PYTHON_DEFAULT,
+  [WorkerType.TERRAFORM]: WorkerType.TERRAFORM,
+  [WorkerType.ANSIBLE]: WorkerType.ANSIBLE,
 };
 
 export const TemplateParamTypeLabelMap: Record<TemplateParamType, string> = {
