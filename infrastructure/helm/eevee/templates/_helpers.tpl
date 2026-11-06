@@ -183,6 +183,10 @@ override the local defaults baked into worker.constants.ts.
   value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeDefaultPostgresql | quote }}
 - name: WORKER_IMAGE_NODE_NESTJS_POSTGRESQL
   value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeNestjsPostgresql | quote }}
+- name: WORKER_IMAGE_TERRAFORM
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.terraformDefault | quote }}
+- name: WORKER_IMAGE_ANSIBLE
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.ansibleDefault | quote }}
 {{- end -}}
 
 {{/*

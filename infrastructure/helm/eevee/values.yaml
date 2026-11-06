@@ -189,6 +189,8 @@ workerImages:
   pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
   nodeDefaultPostgresql: ghcr.io/cocsi-mg/worker-node-default-postgresql-img:latest
   nodeNestjsPostgresql: ghcr.io/cocsi-mg/worker-nestjs-postgresql-img:latest
+  terraformDefault: ghcr.io/cocsi-mg/worker-terraform-default-img:latest
+  ansibleDefault: ghcr.io/cocsi-mg/worker-ansible-default-img:latest
 
 # -----------------------------------------------------------------------------
 # Frontend (Next.js)
