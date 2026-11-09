@@ -31,9 +31,9 @@ if [ -d "$TEST_PATH" ]; then
   done
 fi
 
-# ponytail: sem scripts de validação ainda definidos por exercício, usa o
-# exit code do ansible-playbook como único critério. Trocar quando o Cap5
-# (Projeto de Ensino) definir os critérios reais por exercício.
+# Sem scripts de validação ainda definidos por exercício, usa o exit code do
+# ansible-playbook como único critério. Trocar quando o Cap5 (Projeto de
+# Ensino) definir os critérios reais por exercício.
 if [ "$total" -eq 0 ] && [ "$run_exit" -ne 0 ]; then
   total=1
 fi
