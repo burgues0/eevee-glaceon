@@ -1,3 +1,5 @@
+import { WorkerResourceNode } from "./worker-resource";
+
 export type SchedulingFiles = Record<string, string>;
 export type SchedulingPreviewRunStatus =
   | "pending"
@@ -19,6 +21,7 @@ export interface SchedulingResponse {
   passes: number;
   fails: number;
   report: string;
+  resources?: WorkerResourceNode[];
 }
 
 export interface SchedulingPreviewRun {
@@ -30,6 +33,7 @@ export interface SchedulingPreviewRun {
   passes?: number;
   fails?: number;
   report?: string;
+  resources?: WorkerResourceNode[];
   errorMessage?: string;
   createdAt: string;
   updatedAt: string;

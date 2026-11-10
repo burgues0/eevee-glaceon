@@ -4,6 +4,7 @@ import { UserRole } from "@/app/interface/scheduler-api/user";
 import WorkspaceHeader from "@/app/assignment/[id]/workspace/_components/workspace-header";
 import WorkspaceHeaderActions from "@/app/assignment/[id]/workspace/_components/workspace-header-actions";
 import Workspace from "@/app/assignment/[id]/workspace/_components/workspace";
+import { WorkspaceResourcesPanel } from "@/app/assignment/[id]/workspace/_components/workspace-resources-panel";
 import WorkspaceAgreement from "@/app/assignment/[id]/workspace/_components/workspace-agreement";
 import { WorkspaceLoading } from "@/app/assignment/[id]/workspace/_components/workspace-loading";
 import { WorkspaceRunPreviewDialog } from "@/app/assignment/[id]/workspace/_components/modals/workspace-run-preview-dialog";
@@ -16,6 +17,9 @@ import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { toast } from "@/hooks/use-toast";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { isAxiosError } from "axios";
 import { useParams, useRouter } from "next/navigation";
@@ -41,6 +45,7 @@ export default function Page() {
     useState<boolean>(false);
   const [isRefreshingAssignmentForClear, setIsRefreshingAssignmentForClear] =
     useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"editor" | "resources">("editor");
 
   const handleResetWorkspaceReady = (
     resetAction: ((assignment?: Assignment) => Promise<void>) | null,
@@ -190,6 +195,10 @@ export default function Page() {
     return <WorkspaceSuspension />;
   }
 
+  const hasResourcesTab =
+    assignmentData?.workerType === WorkerType.TERRAFORM ||
+    assignmentData?.workerType === WorkerType.ANSIBLE;
+
   const effectiveDueDate = earliestDate(assignmentData?.dueDate, assignmentData?.examAssignment?.exam?.dueDate);
 
   const isSubmissionClosed = Boolean(
@@ -252,13 +261,47 @@ export default function Page() {
         }}
       />
 
-      {assignmentData && user && (
-        <Workspace
-          assignment={assignmentData}
-          user={user}
-          onResetWorkspaceReady={handleResetWorkspaceReady}
-          onResettingChange={setIsResettingWorkspace}
+      {hasResourcesTab && (
+        <div className="flex items-center gap-1 border-b border-border/25 px-2 py-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(activeTab === "resources" && "bg-primary/20")}
+            onClick={() => setActiveTab("resources")}
+          >
+            Recursos
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(activeTab === "editor" && "bg-primary/20")}
+            onClick={() => setActiveTab("editor")}
+          >
+            Editor
+          </Button>
+        </div>
+      )}
+
+      {assignmentData && user && hasResourcesTab && activeTab === "resources" ? (
+        <WorkspaceResourcesPanel
+          title={assignmentData.title}
+          loading={previewLoading}
+          hasRun={Boolean(previewResult) || previewLoading}
+          score={previewResult?.score ?? 0}
+          passes={previewResult?.passes ?? 0}
+          fails={previewResult?.fails ?? 0}
+          resources={previewResult?.resources}
+          report={previewResult?.report}
         />
+      ) : (
+        assignmentData && user && (
+          <Workspace
+            assignment={assignmentData}
+            user={user}
+            onResetWorkspaceReady={handleResetWorkspaceReady}
+            onResettingChange={setIsResettingWorkspace}
+          />
+        )
       )}
     </div>
   );

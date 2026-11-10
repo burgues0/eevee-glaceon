@@ -110,6 +110,7 @@ export function mapPreviewRunToResponse(
     passes: Number(previewRun.passes ?? 0),
     fails: Number(previewRun.fails ?? 0),
     report: previewRun.report ?? "",
+    resources: previewRun.resources,
   };
 }
 

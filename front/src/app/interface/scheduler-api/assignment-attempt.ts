@@ -13,6 +13,8 @@ export const PROCESSING_ATTEMPT_STATUSES: ReadonlySet<string> = new Set([
   AttemptStatus.Running,
 ]);
 
+import { WorkerResourceNode } from "./worker-resource";
+
 export interface AssignmentAttempt {
   id: number;
   attempt: number;
@@ -24,6 +26,7 @@ export interface AssignmentAttempt {
   fails: number;
   report: string;
   refinedReport?: string;
+  resources?: WorkerResourceNode[];
   status: string;
   createdAt?: string;
 }
