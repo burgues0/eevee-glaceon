@@ -7,6 +7,7 @@ import {
   ManyToOne,
   Index,
 } from 'typeorm';
+import { WorkerResourceNode } from '@eevee/execution-contracts';
 import { AttemptStatus } from '../enums/attempt-status.enum';
 
 @Entity()
@@ -56,6 +57,9 @@ export class Attempt {
 
   @Column('jsonb', { nullable: true })
   receivedWork?: Record<string, string>;
+
+  @Column('jsonb', { nullable: true })
+  resources?: WorkerResourceNode[];
 
   @Column()
   report: string;

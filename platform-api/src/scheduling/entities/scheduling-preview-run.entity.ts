@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { WorkerResourceNode } from '@eevee/execution-contracts';
 
 export enum SchedulingPreviewRunStatus {
   PENDING = 'pending',
@@ -49,6 +50,9 @@ export class SchedulingPreviewRun {
 
   @Column({ type: 'text', nullable: true, default: '' })
   report?: string;
+
+  @Column('jsonb', { nullable: true })
+  resources?: WorkerResourceNode[];
 
   @Column({ type: 'text', nullable: true })
   errorMessage?: string;
