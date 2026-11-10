@@ -46,10 +46,30 @@ export interface ExecutionCancelRequest {
 
 export type ExecutionRequestCommand = ExecutionRequest | ExecutionCancelRequest;
 
+export type WorkerResourceStatus = 'ok' | 'error' | 'pending';
+
+export interface WorkerResourceAttribute {
+  key: string;
+  value: string;
+}
+
+export interface WorkerResourceNode {
+  id: string;
+  label: string;
+  kind: 'group' | 'resource' | 'task';
+  status?: WorkerResourceStatus;
+  type?: string;
+  attributes?: WorkerResourceAttribute[];
+  relatedResources?: WorkerResourceAttribute[];
+  logs?: string;
+  children?: WorkerResourceNode[];
+}
+
 export interface ExecutionWorkerResult {
   completeTrace: string;
   failures: number;
   passes: number;
+  resources?: WorkerResourceNode[];
 }
 
 export type ExecutionEventName =
@@ -63,6 +83,7 @@ export interface ExecutionResult {
   report: string;
   fails: number;
   passes: number;
+  resources?: WorkerResourceNode[];
 }
 
 export interface ExecutionEvent {
