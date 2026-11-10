@@ -4,7 +4,7 @@ import { WorkerType } from '../enum/worker-type.enum';
 import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFIX } from '../worker.constants';
 import { BootstrapInitContainerStrategy } from './bootstrap-init-container.strategy';
 import { WorkerConfig } from './worker-execution-strategy';
-import { parseJestLogResult } from './worker-log-parsers';
+import { parseAnsibleLogResult } from './worker-resource-parsers';
 import {
   asShellCommand,
   buildWriteFileCommand,
@@ -31,7 +31,7 @@ export class AnsibleDefaultStrategy extends BootstrapInitContainerStrategy {
     testPath: '/app/test',
   };
 
-  processLogResult = parseJestLogResult;
+  processLogResult = parseAnsibleLogResult;
 
   buildExecutionJobCommand(_createWorkerData: CreateWorkerDto): string[] {
     return ['/app/trigger.sh'];

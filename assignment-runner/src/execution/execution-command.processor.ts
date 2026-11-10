@@ -40,6 +40,7 @@ export class ExecutionCommandProcessor extends WorkerHost {
         report: result.completeTrace,
         fails: result.failures,
         passes: result.passes,
+        resources: result.resources,
       });
     } catch (error) {
       const errorMessage =
