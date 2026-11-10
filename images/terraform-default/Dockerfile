@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      bash awscli ca-certificates \
+      bash awscli ca-certificates jq \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=terraform-bin /usr/local/bin/terraform /usr/local/bin/terraform
