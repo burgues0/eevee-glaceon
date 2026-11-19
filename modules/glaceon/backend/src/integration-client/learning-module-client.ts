@@ -54,6 +54,20 @@ export interface SubmitAttemptResultV1 {
   isAcceptable: boolean;
 }
 
+// Carries the Integration API's own HTTP status (404 for unknown/retired/
+// cross-class, 403 for role checks, 401 for bad credentials, 400 for a
+// malformed Idempotency-Key) so callers can surface the same denial to the
+// module's own frontend instead of a generic 500 — see
+// LearningModuleClientExceptionFilter, the one place this gets translated.
+export class LearningModuleClientError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 export interface LearningModuleClient {
   listCatalog(userAssertion: string): Promise<LearningModuleCatalogEntryV1[]>;
   getContext(
@@ -104,8 +118,11 @@ export function createLearningModuleClient(
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Integration API ${init?.method ?? 'GET'} ${path} failed: ${response.status}`,
+      const body = await response.json().catch(() => null);
+      throw new LearningModuleClientError(
+        response.status,
+        (body && typeof body === 'object' && 'message' in body && String(body.message)) ||
+          `Integration API ${init?.method ?? 'GET'} ${path} failed: ${response.status}`,
       );
     }
 

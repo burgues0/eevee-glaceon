@@ -115,7 +115,12 @@ export class LearningModuleService {
       where: { externalActivityId, moduleId: ctx.moduleId },
     });
 
-    if (!activity || activity.status === LearningModuleActivityStatus.RETIRED) {
+    const hiddenFromStudent =
+      activity?.status === LearningModuleActivityStatus.DRAFT && ctx.role === UserRole.STUDENT;
+
+    if (!activity || activity.status === LearningModuleActivityStatus.RETIRED || hiddenFromStudent) {
+      // Same generic message for unknown/retired/unpublished — never reveal
+      // a draft activity's existence to a student hitting the id directly.
       throw new NotFoundException('Unknown or retired activity.');
     }
 
