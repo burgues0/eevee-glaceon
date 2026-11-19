@@ -262,7 +262,7 @@ export default function Page() {
       />
 
       {hasResourcesTab && (
-        <div className="flex items-center gap-1 border-b border-border/25 px-2 py-1">
+        <div className="glaceon-theme flex items-center gap-1 border-b border-border/25 px-2 py-1">
           <Button
             variant="ghost"
             size="sm"

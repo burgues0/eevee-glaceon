@@ -137,7 +137,7 @@ export function WorkspaceResourcesPanel({
   const hasResources = Boolean(resources?.length);
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+    <div className="glaceon-theme flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b border-border/25 px-4 py-2">
         <span className="min-w-0 truncate text-sm text-muted-foreground">
           Tarefa: {title}
