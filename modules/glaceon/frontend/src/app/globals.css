@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+
+    /* Paleta do Pokémon Glaceon (#94e6ee, #415a6a, #7b9cb4) — este app É o
+       módulo, então a paleta vale o tema inteiro, não só um recorte dele
+       (ao contrário do .glaceon-theme escopado que existia no front nativo). */
+    --background: 203 24% 12%;
+    --foreground: 185 40% 92%;
+
+    --primary: 185 73% 76%; /* #94e6ee */
+    --primary-foreground: 203 24% 33%; /* #415a6a */
+
+    --secondary: 203 24% 22%;
+    --secondary-foreground: 185 40% 92%;
+
+    --muted: 203 24% 16%;
+    --muted-foreground: 205 27% 59%; /* #7b9cb4 */
+
+    --accent: 185 73% 76%; /* #94e6ee */
+    --accent-foreground: 203 24% 33%; /* #415a6a */
+
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 203 24% 12%;
+    --success: 142 69% 58%;
+    --success-foreground: 203 24% 12%;
+
+    --border: 205 27% 59%; /* #7b9cb4 */
+    --input: 205 27% 59%;
+    --ring: 185 73% 76%; /* #94e6ee */
+
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
