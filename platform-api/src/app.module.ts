@@ -35,6 +35,7 @@ import { ExecutionPlatformEventsModule } from './execution/execution-platform-ev
 import { LearningActivityModule } from './learning-activity/learning-activity.module';
 import { InvitationModule } from './invitation/invitation.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { LearningModuleModule } from './learning-module/learning-module.module';
 
 import { ClassAccessModule } from './auth/class-access.module';
 @Module({
@@ -81,7 +82,8 @@ import { ClassAccessModule } from './auth/class-access.module';
     ExecutionPlatformEventsModule,
     LearningActivityModule,
     InvitationModule,
-    DashboardModule
+    DashboardModule,
+    LearningModuleModule
   ],
   controllers: [AppController],
   providers: [
