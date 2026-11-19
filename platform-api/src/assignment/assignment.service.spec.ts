@@ -740,7 +740,7 @@ describe('AssignmentService', () => {
 
       expect(qb.leftJoin).toHaveBeenCalledWith('a.examAssignment', 'exam');
 
-      expect(qb.where).toHaveBeenCalledWith('a.classId = :classId AND exam.id IS NULL');
+      expect(qb.where).toHaveBeenCalledWith('a.classId = :classId AND a.archived = false AND exam.id IS NULL');
 
       expect(qb.setParameters).toHaveBeenCalledWith({
         classId: 1,
@@ -933,7 +933,7 @@ describe('AssignmentService', () => {
 
       expect(classAccess.assertClassAccess).toHaveBeenCalledWith(1);
 
-      expect(qb.where).toHaveBeenCalledWith('a.classId = :classId AND exam.id IS NULL');
+      expect(qb.where).toHaveBeenCalledWith('a.classId = :classId AND a.archived = false AND exam.id IS NULL');
       expect(qb.andWhere).not.toHaveBeenCalled();
     });
   });

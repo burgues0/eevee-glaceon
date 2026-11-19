@@ -121,6 +121,13 @@ export class Assignment {
   })
   workerType: WorkerType;
 
+  // Hides the assignment from the native class listing/student workspace
+  // without deleting it, so attempt history stays intact. Set for the 2
+  // GLACEON reference assignments once their content moved behind the
+  // learning_module_activity catalog (see docs/glaceon.md).
+  @Column({ default: false })
+  archived: boolean;
+
   @Column({ type: 'text', nullable: true })
   initSqlScript?: string;
 

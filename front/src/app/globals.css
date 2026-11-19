@@ -75,18 +75,6 @@
     --editor-selection: var(--third-color);
     --editor-cursor: var(--fourth-color);
   }
-
-  /* GLACEON (Terraform/Ansible): paleta do Pokémon Glaceon, restrita à aba
-     "Recursos" e seu seletor de aba — não toca no tema global do EEVEE. */
-  .glaceon-theme {
-    --primary: 185 73% 76%; /* #94e6ee */
-    --primary-foreground: 203 24% 33%; /* #415a6a */
-    --accent: 185 73% 76%; /* #94e6ee */
-    --accent-foreground: 203 24% 33%; /* #415a6a */
-    --border: 205 27% 59%; /* #7b9cb4 */
-    --ring: 185 73% 76%; /* #94e6ee */
-    --muted-foreground: 205 27% 59%; /* #7b9cb4 */
-  }
 }
 
 @layer base {

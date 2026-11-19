@@ -711,7 +711,7 @@ export class AssignmentService {
         'last',
         'last.assignment_id = a.id'
       )
-      .where('a.classId = :classId AND exam.id IS NULL')
+      .where('a.classId = :classId AND a.archived = false AND exam.id IS NULL')
       .setParameters({
         classId,
         userId: user.userId,
@@ -824,7 +824,8 @@ export class AssignmentService {
         .andWhere(
           '(detailsExamAssignment.id IS NULL OR (detailsExam.startDate IS NOT NULL AND detailsExam.startDate <= :examNow))',
           { examNow: now },
-        );
+        )
+        .andWhere('assignment.archived = false');
     }
 
     const response = await query.getOne();

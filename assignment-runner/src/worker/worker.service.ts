@@ -22,8 +22,6 @@ import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.stra
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
 import { NodeTeraormJestStrategy } from './strategies/node-teraorm-jest.strategy';
 import { PythonDefaultStrategy } from './strategies/python-default.strategy';
-import { TerraformDefaultStrategy } from './strategies/terraform-default.strategy';
-import { AnsibleDefaultStrategy } from './strategies/ansible-default.strategy';
 import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
 
@@ -49,8 +47,6 @@ export class WorkerService {
     [WorkerType.NODE_NESTJS_POSTGRESQL]: new NodeNestJsPostgresqlJestStrategy(), // Reuse NodeNestJsStrategy with Postgres support enabled
     [WorkerType.NODE_TERAORM]: new NodeTeraormJestStrategy(),
     [WorkerType.PYTHON_DEFAULT]: new PythonDefaultStrategy(),
-    [WorkerType.TERRAFORM]: new TerraformDefaultStrategy(),
-    [WorkerType.ANSIBLE]: new AnsibleDefaultStrategy(),
   };
 
   getStrategy(workerType: WorkerType): WorkerExecutionStrategy {
