@@ -65,6 +65,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secrets.name }}
                   key: JWT_SECRET
+            - name: LEARNING_MODULE_CREDENTIAL_GLACEON
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: LEARNING_MODULE_CREDENTIAL_GLACEON
           resources:
             {{- toYaml .Values.platformApi.resources | nindent 12 }}
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}

@@ -60,6 +60,27 @@ server {
     proxy_set_header Connection $connection_upgrade;
   }
 
+  # GLACEON module. The api/ location is more specific than the plain
+  # module location below, so nginx always prefers it regardless of
+  # declaration order — requests never fall through to the module frontend.
+  location /modules/glaceon/api/ {
+    proxy_pass http://glaceon-backend-service:{{ .Values.glaceonModule.backend.servicePort }}/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /modules/glaceon/ {
+    proxy_pass http://glaceon-frontend-service:{{ .Values.glaceonModule.frontend.servicePort }}/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
   location / {
     proxy_pass http://eevee-front-service:80;
     proxy_http_version 1.1;

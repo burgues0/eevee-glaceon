@@ -57,6 +57,10 @@ secrets:
     JWT_SECRET: ""
     GROQ_API_KEY: ""
     GMAIL_APP_PASSWORD: ""
+    # Shared between platform-api (reads it as LEARNING_MODULE_CREDENTIAL_GLACEON
+    # to validate the module's calls) and the GLACEON module backend (reads the
+    # same value as GLACEON_MODULE_CREDENTIAL to send them) — see glaceonModule below.
+    LEARNING_MODULE_CREDENTIAL_GLACEON: ""
 
 # -----------------------------------------------------------------------------
 # Postgres
@@ -189,6 +193,51 @@ workerImages:
   pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
   nodeDefaultPostgresql: ghcr.io/cocsi-mg/worker-node-default-postgresql-img:latest
   nodeNestjsPostgresql: ghcr.io/cocsi-mg/worker-nestjs-postgresql-img:latest
+
+# -----------------------------------------------------------------------------
+# GLACEON — standalone learning module (backend + frontend), per
+# docs/guia-migracao-modulos-internos-sql-arquitetura.md. Talks to
+# platform-api only through the Learning Module Integration API
+# (/v1/module-integration/v1); never gets DB credentials and never queries
+# the EEVEE database directly. The backend spawns the same Kubernetes Jobs
+# assignment-runner used to (images reused as-is), so it needs the same
+# worker-job RBAC — see serviceAccount above.
+# -----------------------------------------------------------------------------
+glaceonModule:
+  enabled: true
+  images:
+    bootstrap: ghcr.io/cocsi-mg/eevee-worker-bootstrap:latest
+    terraformDefault: ghcr.io/cocsi-mg/worker-terraform-default-img:latest
+    ansibleDefault: ghcr.io/cocsi-mg/worker-ansible-default-img:latest
+  backend:
+    image:
+      repository: ghcr.io/cocsi-mg/glaceon-module-backend
+      tag: latest
+      pullPolicy: Always
+    env: "production"
+    replicas: 1
+    containerPort: 3020
+    servicePort: 80
+    # Internal service DNS for the Learning Module Integration API.
+    integrationUrl: "http://platform-api-service:3000/v1/module-integration/v1"
+    resources:
+      requests:
+        memory: 128Mi
+      limits:
+        memory: 384Mi
+  frontend:
+    image:
+      repository: ghcr.io/cocsi-mg/glaceon-module-frontend
+      tag: latest
+      pullPolicy: Always
+    replicas: 1
+    containerPort: 3021
+    servicePort: 80
+    resources:
+      requests:
+        memory: 128Mi
+      limits:
+        memory: 384Mi
 
 # -----------------------------------------------------------------------------
 # Frontend (Next.js)

@@ -82,6 +82,7 @@ single release:
 | Platform API      | Deployment + Service                              |
 | Assignment Runner | Deployment + RBAC (ServiceAccount/Role)           |
 | Frontend          | Deployment + Service                              |
+| GLACEON module    | 2x Deployment + Service (standalone backend+frontend) |
 | Entrypoint        | Nginx gateway + NodePort Service                  |
 | Ingress (nginx)   | Ingress with optional TLS                         |
 | cert-manager      | Namespace-scoped `Issuer` (optional)              |
@@ -160,14 +161,17 @@ The secret name (`ghcr-auth`) must match `imagePullSecret.name` in
 kubectl -n $NAMESPACE create secret generic eevee-secrets \
   --from-literal=DB_PASSWORD="$(openssl rand -base64 24)" \
   --from-literal=JWT_SECRET="$(openssl rand -base64 48)" \
-  --from-literal=GROQ_API_KEY="<your-groq-key-or-empty>"
+  --from-literal=GROQ_API_KEY="<your-groq-key-or-empty>" \
+  --from-literal=LEARNING_MODULE_CREDENTIAL_GLACEON="$(openssl rand -base64 32)"
 ```
 
-Key names must match exactly: `DB_PASSWORD`, `JWT_SECRET`, `GROQ_API_KEY`.
+Key names must match exactly: `DB_PASSWORD`, `JWT_SECRET`, `GROQ_API_KEY`,
+`LEARNING_MODULE_CREDENTIAL_GLACEON` (shared between platform-api and the
+GLACEON module backend — see `glaceonModule` in [values.yaml](values.yaml)).
 The secret name (`eevee-secrets`) must match `secrets.name` in values.
 
 > **Rotating a secret:** edit it with `kubectl edit secret eevee-secrets`
-> (or recreate it) and then `kubectl rollout restart deploy/platform-api-deployment deploy/assignment-runner-deployment` to pick up the new value.
+> (or recreate it) and then `kubectl rollout restart deploy/platform-api-deployment deploy/assignment-runner-deployment deploy/glaceon-backend-deployment` to pick up the new value.
 
 ### 3. Install / upgrade the release
 
@@ -195,6 +199,8 @@ public entrypoint. It routes:
 
 - `/` to `eevee-front-service`
 - `/api/v1/*` to `platform-api-service`
+- `/modules/glaceon/api/*` to `glaceon-backend-service`
+- `/modules/glaceon/*` (everything else) to `glaceon-frontend-service`
 
 For local access without a public VM, use only frontend port-forward:
 
@@ -258,6 +264,17 @@ workerImages:
   # ...
   nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:latest
   pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
+```
+
+The GLACEON module (Terraform/Ansible) is a separate standalone service —
+see `glaceonModule.images` instead, which its own backend reads the same way:
+
+```yaml
+glaceonModule:
+  images:
+    bootstrap: ghcr.io/cocsi-mg/eevee-worker-bootstrap:latest
+    terraformDefault: ghcr.io/cocsi-mg/worker-terraform-default-img:latest
+    ansibleDefault: ghcr.io/cocsi-mg/worker-ansible-default-img:latest
 ```
 
 The RNP deployment uses the entrypoint gateway NodePort with ingress disabled.
