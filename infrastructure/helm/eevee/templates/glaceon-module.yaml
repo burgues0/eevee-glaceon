@@ -55,7 +55,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.name }}
-                  key: LEARNING_MODULE_CREDENTIAL_GLACEON
+                  key: LEARNING_MODULE_CREDENTIAL_TERRAFORM_ANSIBLE_PRACTICE
             - name: WORKER_BOOTSTRAP_IMAGE
               value: {{ include "eevee.latestWorkerImage" .Values.glaceonModule.images.bootstrap | quote }}
             - name: WORKER_IMAGE_TERRAFORM

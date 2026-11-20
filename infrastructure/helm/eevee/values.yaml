@@ -57,10 +57,12 @@ secrets:
     JWT_SECRET: ""
     GROQ_API_KEY: ""
     GMAIL_APP_PASSWORD: ""
-    # Shared between platform-api (reads it as LEARNING_MODULE_CREDENTIAL_GLACEON
-    # to validate the module's calls) and the GLACEON module backend (reads the
-    # same value as GLACEON_MODULE_CREDENTIAL to send them) — see glaceonModule below.
-    LEARNING_MODULE_CREDENTIAL_GLACEON: ""
+    # Shared between platform-api (reads it as
+    # LEARNING_MODULE_CREDENTIAL_TERRAFORM_ANSIBLE_PRACTICE — env-var form of
+    # the module id "terraform-ansible-practice", to validate the module's
+    # calls) and the GLACEON module backend (reads the same value as
+    # GLACEON_MODULE_CREDENTIAL to send them) — see glaceonModule below.
+    LEARNING_MODULE_CREDENTIAL_TERRAFORM_ANSIBLE_PRACTICE: ""
 
 # -----------------------------------------------------------------------------
 # Postgres

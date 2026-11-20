@@ -4,8 +4,12 @@ GLACEON é um **módulo de aprendizagem independente** do EEVEE: serviço
 próprio (backend + frontend), chart Helm próprio, sem acesso ao banco do
 EEVEE e sem TypeORM. Fala com o EEVEE só pela *Learning Module Integration
 API* (`platform-api`, `/api/v1/module-integration/v1`), autenticado por
-sessão própria (cookie `eevee_module_glaceon`) + credencial de carga de
-trabalho. Este é o padrão definido por
+sessão própria (cookie `eevee_module_terraform-ansible-practice`) + credencial
+de carga de trabalho. O id de contrato do módulo é
+`terraform-ansible-practice` — descritivo, igual ao `sql-practice`/
+`architecture-forms` do guia, e distinto de "GLACEON" (nome do projeto/TCC,
+usado só em pastas, recursos K8s e nomes internos). Este é o padrão definido
+por
 [`docs/guia-migracao-modulos-internos-sql-arquitetura.md`](guia-migracao-modulos-internos-sql-arquitetura.md),
 que o orientador confirmou valer pra todo módulo futuro do EEVEE, não só
 GLACEON.
@@ -28,16 +32,16 @@ modules/glaceon/
   backend/   # NestJS, porta 3020. Sem TypeORM, sem PG_*, sem acesso ao
              # banco do EEVEE. Fala com a Integration API, dispara Job K8s,
              # faz parsing do resultado, envia o attempt.
-  frontend/  # Next.js próprio, porta 3021. Sessão eevee_module_glaceon,
-             # fala só com o backend do módulo (nunca com a platform-api
-             # diretamente, nunca com banco).
+  frontend/  # Next.js próprio, porta 3021. Sessão
+             # eevee_module_terraform-ansible-practice, fala só com o backend
+             # do módulo (nunca com a platform-api diretamente, nunca com banco).
 ```
 
 O gateway nginx (`infrastructure/helm/eevee/templates/_helpers.tpl`, helper
 `eevee.entrypointNginxConf`) expõe os dois sob um único domínio público:
 
-- `/modules/glaceon/api/*` → `glaceon-backend-service`
-- `/modules/glaceon/*` (resto) → `glaceon-frontend-service`
+- `/modules/terraform-ansible-practice/api/*` → `glaceon-backend-service`
+- `/modules/terraform-ansible-practice/*` (resto) → `glaceon-frontend-service`
 
 A rota `api/` é mais específica, então o nginx sempre prefere ela
 independente da ordem de declaração — nenhuma chamada de API cai pro
@@ -57,11 +61,13 @@ do `assignment-runner`.
 ## Sessão e autenticação
 
 1. Aluno loga no EEVEE normalmente (JWT de sessão do EEVEE, `JwtAuthGuard`).
-2. O frontend do módulo chama `GET /api/v1/platform/modules/glaceon/session`
+2. O frontend do módulo chama
+   `GET /api/v1/platform/modules/terraform-ansible-practice/session`
    (`platform-api/src/learning-module/learning-module-session.controller.ts`)
    — reusa o `JwtAuthGuard` existente, emite um JWT curto (TTL configurável,
-   300s em dev) como cookie HttpOnly `eevee_module_glaceon`, escopado a
-   `path: /modules/glaceon/`. Chamar de novo renova (novo token, novo `exp`).
+   300s em dev) como cookie HttpOnly `eevee_module_terraform-ansible-practice`,
+   escopado a `path: /modules/terraform-ansible-practice/`. Chamar de novo
+   renova (novo token, novo `exp`).
 3. Toda chamada do frontend do módulo pro backend do módulo
    (`modules/glaceon/frontend/src/lib/glaceon-api.ts`) manda esse cookie
    (`credentials: 'include'`). O backend do módulo lê o cookie
@@ -70,9 +76,9 @@ do `assignment-runner`.
 4. Toda chamada do backend do módulo pra Integration API
    (`modules/glaceon/backend/src/integration-client/learning-module-client.ts`)
    manda 3 headers: `X-EEVEE-Module-Credential` (segredo compartilhado,
-   `GLACEON_MODULE_CREDENTIAL`/`LEARNING_MODULE_CREDENTIAL_GLACEON` no
-   Helm), `X-EEVEE-Module-Assertion` (o JWT do passo 2) e
-   `X-EEVEE-Learning-Module: glaceon`. `ModuleCredentialGuard`
+   `GLACEON_MODULE_CREDENTIAL`/`LEARNING_MODULE_CREDENTIAL_TERRAFORM_ANSIBLE_PRACTICE`
+   no Helm), `X-EEVEE-Module-Assertion` (o JWT do passo 2) e
+   `X-EEVEE-Learning-Module: terraform-ansible-practice`. `ModuleCredentialGuard`
    (`platform-api/src/learning-module/guards/module-credential.guard.ts`)
    valida os 3 e popula o CLS "user" da request com o usuário resolvido —
    o resto da `platform-api` (`ClassAccessService`, `AttemptService`, ...)
@@ -268,7 +274,7 @@ processes) em 2026-11-19:
 | Build | ✅ `tsc`/`jest`/`next build`/`docker build` limpos nos dois serviços do módulo e na `platform-api` |
 | Testes de contrato consumidor/provedor | ❌ **Não implementado.** Não há verificação automatizada de que o stub do client bate com o shape real da Integration API além dos tipos TypeScript compartilhados manualmente — um teste de contrato (Pact ou equivalente) ficou de fora por escopo/tempo de TCC. Risco real se o pacote oficial divergir do stub |
 | Health check | ✅ `GET /health` adicionado ao backend do módulo (fora do prefixo `/api`), confirmado 200 |
-| Smoke test da rota pública | ✅ Confirmado com um nginx real (não só o Helm `template`) replicando as 2 rotas do gateway contra o backend/frontend do módulo rodando: prefixo é removido corretamente, `/modules/glaceon/api/*` chega no backend, `/modules/glaceon/*` chega no frontend |
+| Smoke test da rota pública | ✅ Confirmado com um nginx real (não só o Helm `template`) replicando as 2 rotas do gateway contra o backend/frontend do módulo rodando: prefixo é removido corretamente, `/modules/terraform-ansible-practice/api/*` chega no backend, `/modules/terraform-ansible-practice/*` chega no frontend |
 
 Os dois bugs encontrados nesta checklist foram corrigidos na mesma sessão
 (ver commit "fix: close two acceptance-test gaps..." na branch

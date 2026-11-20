@@ -63,7 +63,7 @@ server {
   # GLACEON module. The api/ location is more specific than the plain
   # module location below, so nginx always prefers it regardless of
   # declaration order — requests never fall through to the module frontend.
-  location /modules/glaceon/api/ {
+  location /modules/terraform-ansible-practice/api/ {
     proxy_pass http://glaceon-backend-service:{{ .Values.glaceonModule.backend.servicePort }}/api/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
@@ -72,7 +72,7 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 
-  location /modules/glaceon/ {
+  location /modules/terraform-ansible-practice/ {
     proxy_pass http://glaceon-frontend-service:{{ .Values.glaceonModule.frontend.servicePort }}/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;

@@ -40,7 +40,10 @@ export interface GlaceonActivityForStudent {
 export class GlaceonService {
   private readonly client = createLearningModuleClient({
     endpoint: this.getEndpoint(),
-    moduleId: 'glaceon',
+    // Contract-level module id (routes, X-EEVEE-Learning-Module, credential
+    // env var) — distinct from "glaceon", which is just this project's own
+    // name. Same convention the guide's sql-practice/architecture-forms use.
+    moduleId: 'terraform-ansible-practice',
     credential: this.configService.get<string>('GLACEON_MODULE_CREDENTIAL') ?? '',
     allowInsecureHttpForCluster: this.configService.get<string>('ENV') !== 'production',
   });

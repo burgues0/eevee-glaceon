@@ -162,11 +162,12 @@ kubectl -n $NAMESPACE create secret generic eevee-secrets \
   --from-literal=DB_PASSWORD="$(openssl rand -base64 24)" \
   --from-literal=JWT_SECRET="$(openssl rand -base64 48)" \
   --from-literal=GROQ_API_KEY="<your-groq-key-or-empty>" \
-  --from-literal=LEARNING_MODULE_CREDENTIAL_GLACEON="$(openssl rand -base64 32)"
+  --from-literal=LEARNING_MODULE_CREDENTIAL_TERRAFORM_ANSIBLE_PRACTICE="$(openssl rand -base64 32)"
 ```
 
 Key names must match exactly: `DB_PASSWORD`, `JWT_SECRET`, `GROQ_API_KEY`,
-`LEARNING_MODULE_CREDENTIAL_GLACEON` (shared between platform-api and the
+`LEARNING_MODULE_CREDENTIAL_TERRAFORM_ANSIBLE_PRACTICE` (env-var form of the
+module id `terraform-ansible-practice`; shared between platform-api and the
 GLACEON module backend — see `glaceonModule` in [values.yaml](values.yaml)).
 The secret name (`eevee-secrets`) must match `secrets.name` in values.
 
@@ -199,8 +200,8 @@ public entrypoint. It routes:
 
 - `/` to `eevee-front-service`
 - `/api/v1/*` to `platform-api-service`
-- `/modules/glaceon/api/*` to `glaceon-backend-service`
-- `/modules/glaceon/*` (everything else) to `glaceon-frontend-service`
+- `/modules/terraform-ansible-practice/api/*` to `glaceon-backend-service`
+- `/modules/terraform-ansible-practice/*` (everything else) to `glaceon-frontend-service`
 
 For local access without a public VM, use only frontend port-forward:
 
